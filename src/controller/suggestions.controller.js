@@ -1,8 +1,6 @@
 const express = require("express")
 const router = express.Router()
 const { UserUpload } = require("../model/user.model")
-const bcrypt = require("bcryptjs")
-const { formatIsoTimeString } = require("@fullcalendar/core")
 
 // Get suggestions based on mutual friend
 router.get("/", async (req, res) => {

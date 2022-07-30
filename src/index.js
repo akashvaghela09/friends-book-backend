@@ -1,10 +1,10 @@
 const express = require("express");
 const app = express();
 const cors = require('cors');
-const userController = require("./controller/user.controller")
-const friendListController = require("./controller/friendList.controller")
-const friendRequestController = require("./controller/friendRequest.controller")
-const suggestionsController = require("./controller/suggestions.controller")
+const userController = require("./controller/user.controller.js")
+const friendListController = require("./controller/friendList.controller.js")
+const friendRequestController = require("./controller/friendRequest.controller.js")
+const suggestionsController = require("./controller/suggestions.controller.js")
 
 app.use(express.json())
 app.use(cors());

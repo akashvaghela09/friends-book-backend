@@ -3,7 +3,7 @@ const router = express.Router()
 const {UserUpload} = require("../model/user.model")
 
 // Get Friend Request List
-router.get("/", async (req, res) => {
+router.post("/", async (req, res) => {
     const user = await UserUpload.findOne({username :req.body.username}).lean().exec();
     return res.status(200).json({data: user.friendRequestList})
 })

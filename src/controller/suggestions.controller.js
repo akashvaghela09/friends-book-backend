@@ -3,7 +3,7 @@ const router = express.Router()
 const { UserUpload } = require("../model/user.model")
 
 // Get suggestions based on mutual friend
-router.get("/", async (req, res) => {
+router.post("/", async (req, res) => {
     let username = req.body.username;
 
     const allUsers = await UserUpload.find().lean().exec();
@@ -47,7 +47,7 @@ router.get("/", async (req, res) => {
 })
 
 // Get suggestions for All Users
-router.get("/allusers", async (req, res) => {
+router.post("/allusers", async (req, res) => {
     let username = req.body.username;
 
     const allUser = await UserUpload.find().lean().exec();

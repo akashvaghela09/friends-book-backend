@@ -3,15 +3,13 @@ const router = express.Router()
 const {UserUpload} = require("../model/user.model")
 
 // Get Friend List
-router.get("/", async (req, res) => {
-    console.log(req.body)
+router.post("/", async (req, res) => {
     const user = await UserUpload.findOne({username :req.body.username}).lean().exec();
-    console.log(user)
     return res.status(200).json({data: user.friendList})
 })
 
 // Get Mutual Friend List
-router.get("/mutualFriend", async (req, res) => {
+router.post("/mutualFriend", async (req, res) => {
     let username = req.body.username;
     let friendsUsername = req.body.friendsUsername;
 

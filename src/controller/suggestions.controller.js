@@ -1,6 +1,7 @@
 const express = require("express")
 const router = express.Router()
 const { UserUpload } = require("../model/user.model")
+const bcrypt = require("bcryptjs")
 
 // Get suggestions based on mutual friend
 router.post("/", async (req, res) => {
@@ -8,7 +9,6 @@ router.post("/", async (req, res) => {
 
     const allUsers = await UserUpload.find().lean().exec();
     const user = await UserUpload.findOne({ "username": username }).lean().exec();
-
 
     let newSuggestions = [];
 
@@ -37,13 +37,19 @@ router.post("/", async (req, res) => {
 
         let possibleSuggestion = await checkPossibleSuggestion(username, userTobeChecked)
         if (possibleSuggestion === true) {
-            newSuggestions.push(userTobeChecked)
+            let data = calculateMutualFriend(user, allUsers[i])
+            let obj = {
+                "fullname": allUsers[i].fullname,
+                "username": allUsers[i].username,
+                "mutualFriends": data.size
+            }
+            newSuggestions.push(obj)
         }
     }
 
     addInColdList(user, newSuggestions)
 
-    return res.status(200).json({ data: newSuggestions })
+    return res.status(200).json([...newSuggestions])
 })
 
 // Get suggestions for All Users
@@ -56,6 +62,7 @@ router.post("/allusers", async (req, res) => {
     let newList = []
 
     for(let i = 0; i < allUser.length; i++){
+        let nextFriend = allUser[i]
         let person = allUser[i].username;
         if (username === person) {
             continue;
@@ -66,15 +73,27 @@ router.post("/allusers", async (req, res) => {
             continue;
         }
 
+        let pendingStatus = await checkIfAlreadyPending(user, allUser[i])
+        console.log("pending: ", pendingStatus, person)
+        if (pendingStatus === true) {
+            continue;
+        }
+
         let coldListStatus = checkColdList(user, person)
         if (coldListStatus === true) {
             continue;
         }
 
-        newList.push(person);
+        let data = calculateMutualFriend(user, nextFriend)
+        let obj = {
+            "fullname": nextFriend.fullname,
+            "username": nextFriend.username,
+            "mutualFriends": data.size
+        }
+        newList.push(obj);
     }
 
-    return res.status(200).json({data: [...newList]})
+    return res.status(200).json([...newList])
 })
 
 const checkColdList = (user, friend) => {
@@ -106,8 +125,8 @@ const addInColdList = async (user, suggestions) => {
     let newList = [...oldList];
     for (let i = 0; i < suggestions.length; i++) {
         let item = {
-            username: suggestions[i],
-            timestamp: Date.now() + 30000
+            username: suggestions[i].username,
+            timestamp: Date.now() + 86400000
         }
         newList.push(item)
     }
@@ -149,6 +168,41 @@ const checkIfAlreadyFriend = (user, friend) => {
     }
 
     return status;
+}
+
+const checkIfAlreadyPending = async (user, friend) => {
+    let status = false;
+
+    if(friend.friendRequestList <= 0){
+        console.log("Dont have reqests", user.username)
+        return status;
+    }
+
+    if(friend.friendRequestList.includes(user.username)){
+        status = true;
+        return status;
+    }
+
+    return status;
+}
+
+const calculateMutualFriend = (user1, user2) => {
+    let mutualList = [];
+
+    for(let i = 0; i < user1.friendList.length; i++){
+        let person1 = user1.friendList[i]
+
+        for(let j = 0; j < user2.friendList.length; j++){
+            let person2 = user2.friendList[j]
+
+            if(person1 === person2){
+                mutualList.push(person1);
+                break;
+            }
+        }
+    }
+
+    return { "list": mutualList, "size": mutualList.length };
 }
 
 module.exports = router
